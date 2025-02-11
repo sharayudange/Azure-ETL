@@ -1,0 +1,12 @@
+{
+	"name": "MayHttp",
+	"properties": {
+		"annotations": [],
+		"type": "HttpServer",
+		"typeProperties": {
+			"url": "https://raw.githubusercontent.com/aradhya0530/Amazon_sales_ETL/refs/heads/main/May-2022.csv",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Anonymous"
+		}
+	}
+}
