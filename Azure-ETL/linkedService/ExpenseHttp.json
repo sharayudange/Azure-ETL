@@ -1,0 +1,12 @@
+{
+	"name": "ExpenseHttp",
+	"properties": {
+		"annotations": [],
+		"type": "HttpServer",
+		"typeProperties": {
+			"url": "https://raw.githubusercontent.com/aradhya0530/Amazon_sales_ETL/refs/heads/main/Expense%20IIGF.csv",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Anonymous"
+		}
+	}
+}
