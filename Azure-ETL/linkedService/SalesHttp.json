@@ -1,0 +1,12 @@
+{
+	"name": "SalesHttp",
+	"properties": {
+		"annotations": [],
+		"type": "HttpServer",
+		"typeProperties": {
+			"url": "https://raw.githubusercontent.com/aradhya0530/Amazon_sales_ETL/refs/heads/main/Sale%20Report.csv",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Anonymous"
+		}
+	}
+}
