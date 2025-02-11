@@ -382,7 +382,14 @@
 			{
 				"name": "sales",
 				"type": "Copy",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "march",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -402,11 +409,36 @@
 							"type": "DelimitedTextReadSettings"
 						}
 					},
-					"enableStaging": false
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
 				},
 				"inputs": [
 					{
 						"referenceName": "sales",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "sales_sink",
 						"type": "DatasetReference"
 					}
 				]
