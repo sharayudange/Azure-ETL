@@ -1,0 +1,12 @@
+{
+	"name": "CloudHttp",
+	"properties": {
+		"annotations": [],
+		"type": "HttpServer",
+		"typeProperties": {
+			"url": "https://raw.githubusercontent.com/aradhya0530/Amazon_sales_ETL/refs/heads/main/Cloud%20Warehouse%20Compersion%20Chart.csv",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Anonymous"
+		}
+	}
+}
