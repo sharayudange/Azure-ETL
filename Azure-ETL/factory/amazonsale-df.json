@@ -1,9 +1,0 @@
-{
-	"name": "amazonsale-df",
-	"location": "eastus",
-	"identity": {
-		"type": "SystemAssigned",
-		"principalId": "9d703a40-040f-42d2-aff3-444f0c408360",
-		"tenantId": "ab03e065-0e8d-4d12-b8a6-1d55ab300558"
-	}
-}
