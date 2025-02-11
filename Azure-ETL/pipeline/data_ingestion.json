@@ -60,7 +60,7 @@
 				]
 			},
 			{
-				"name": "Copy data1",
+				"name": "cloud",
 				"type": "Copy",
 				"dependsOn": [],
 				"policy": {
