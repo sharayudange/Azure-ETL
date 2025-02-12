@@ -1,0 +1,1231 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workspaceName": {
+			"type": "string",
+			"metadata": "Workspace name",
+			"defaultValue": "amazon-sale-synap"
+		},
+		"amazon-sale-synap-WorkspaceDefaultSqlServer_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'amazon-sale-synap-WorkspaceDefaultSqlServer'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:amazon-sale-synap.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+		},
+		"amazon-sale-synap-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://amazonsalestorage.dfs.core.windows.net"
+		}
+	},
+	"variables": {
+		"workspaceId": "[concat('Microsoft.Synapse/workspaces/', parameters('workspaceName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('workspaceName'), '/amazon-sale-synap-WorkspaceDefaultSqlServer')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"parameters": {
+					"DBName": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"connectionString": "[parameters('amazon-sale-synap-WorkspaceDefaultSqlServer_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/amazon-sale-synap-WorkspaceDefaultStorage')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('amazon-sale-synap-WorkspaceDefaultStorage_properties_typeProperties_url')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/AutoResolveIntegrationRuntime')]",
+			"type": "Microsoft.Synapse/workspaces/integrationRuntimes",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "AutoResolve",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 0
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/WorkspaceSystemIdentity')]",
+			"type": "Microsoft.Synapse/workspaces/credentials",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "ManagedIdentity",
+				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 1')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "-- Query to calculate total sales and average sales amount for each category\nSELECT \n    Category,\n    SUM(Sales_Amount) AS Total_Sales_Amount,  -- Sum of sales amount for each category\n    AVG(Sales_Amount) AS Average_Sales_Amount, -- Average sales amount for each category\n    COUNT(*) AS Number_of_Records             -- Count of records for each category\nFROM category_wise_order_analysis\nGROUP BY Category  -- Group the data by Category\nORDER BY Total_Sales_Amount DESC;  -- Order by Total Sales Amount in descending order\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "AmazonDB",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 10')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SELECT Category, \n       SUM(Free + XS + S + M + L + XL + XXL + \"3XL\" + \"4XL\" + \"5XL\" + \"6XL\") AS Total_Sales\nFROM size_sales_amount\nWHERE Category <> 'Saree'\nGROUP BY Category\nORDER BY Total_Sales DESC;",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "AmazonDB",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 11')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SELECT TOP 3 Category, XL\nFROM size_sales_amount\nORDER BY XL DESC;",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "AmazonDB",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 12')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "WITH Sales_Percentage AS (\n    SELECT Category, \n           Free, XS, S, M, L, XL, XXL, \"3XL\", \"4XL\", \"5XL\", \"6XL\",\n           (Free + XS + S + M + L + XL + XXL + \"3XL\" + \"4XL\" + \"5XL\" + \"6XL\") AS Total_Sales\n    FROM size_sales_quantity\n)\nSELECT Category, \n       (XS * 100.0 / Total_Sales) AS XS_Percentage,\n       (S * 100.0 / Total_Sales) AS S_Percentage,\n       (M * 100.0 / Total_Sales) AS M_Percentage,\n       (L * 100.0 / Total_Sales) AS L_Percentage,\n       (XL * 100.0 / Total_Sales) AS XL_Percentage,\n       (XXL * 100.0 / Total_Sales) AS XXL_Percentage\nFROM Sales_Percentage\nORDER BY Total_Sales DESC;",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "AmazonDB",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 13')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SELECT Category, \n       (XS * 100.0) / (Free + XS + S + M + L + XL + XXL + \"3XL\" + \"4XL\" + \"5XL\" + \"6XL\") AS XS_Percentage,\n       (S * 100.0) / (Free + XS + S + M + L + XL + XXL + \"3XL\" + \"4XL\" + \"5XL\" + \"6XL\") AS S_Percentage,\n       (M * 100.0) / (Free + XS + S + M + L + XL + XXL + \"3XL\" + \"4XL\" + \"5XL\" + \"6XL\") AS M_Percentage\nFROM size_sales_quantity;",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "AmazonDB",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 2')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "-- Query to calculate total number of orders and total sales for each category\nSELECT \n    Category,\n    SUM(Number_of_Orders) AS Total_Orders,\n    SUM(Sales_Amount) AS Total_Sales_Amount\nFROM category_wise_order_analysis\nGROUP BY Category\nORDER BY Total_Sales_Amount DESC;  -- Order by total sales amount in descending order\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "AmazonDB",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 3')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "-- Query to get the top 3 categories with the highest total sales\nSELECT TOP 3\n    Category,\n    SUM(Sales_Amount) AS Total_Sales_Amount\nFROM category_wise_order_analysis\nGROUP BY Category\nORDER BY Total_Sales_Amount DESC;  -- Order by total sales amount in descending order\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "AmazonDB",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 4')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "-- Query to calculate the average size distribution for each category\nSELECT \n    Category,\n    AVG(Free) AS Avg_Free,\n    AVG(XS) AS Avg_XS,\n    AVG(S) AS Avg_S,\n    AVG(M) AS Avg_M,\n    AVG(L) AS Avg_L,\n    AVG(XL) AS Avg_XL,\n    AVG(XXL) AS Avg_XXL,\n    AVG([3XL]) AS Avg_3XL,  -- Enclose 3XL in square brackets\n    AVG([4XL]) AS Avg_4XL,  -- Enclose 4XL in square brackets\n    AVG([5XL]) AS Avg_5XL,  -- Enclose 5XL in square brackets\n    AVG([6XL]) AS Avg_6XL   -- Enclose 6XL in square brackets\nFROM size_sales_quantity\nGROUP BY Category\nORDER BY Category;\n\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "AmazonDB",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 5')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "-- Query to calculate the total count of products in XS and S sizes for each category\nSELECT \n    Category,\n    SUM(XS + S) AS Total_XS_S\nFROM size_sales_quantity\nGROUP BY Category\nORDER BY Total_XS_S DESC;\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "AmazonDB",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 6')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SELECT state, Sales_Amount, RANK() OVER (ORDER BY Sales_Amount DESC) AS Sales_Rank\nFROM state_wise_order_analysis;",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "AmazonDB",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 7')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SELECT TOP 5 state, Sales_Amount \nFROM state_wise_order_analysis\nORDER BY Sales_Amount DESC;",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "AmazonDB",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 8')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SELECT state, Number_of_Orders, Sales_Amount \nFROM state_wise_order_analysis\nWHERE Number_of_Orders > 1000 AND Sales_Amount < 1500000;",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "AmazonDB",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 9')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SELECT Category, \n       (XS / (XS + S + M + L + XL + XXL + \"3XL\" + \"4XL\" + \"5XL\" + \"6XL\")) * 100 AS XS_Percentage,\n       (S / (XS + S + M + L + XL + XXL + \"3XL\" + \"4XL\" + \"5XL\" + \"6XL\")) * 100 AS S_Percentage,\n       (M / (XS + S + M + L + XL + XXL + \"3XL\" + \"4XL\" + \"5XL\" + \"6XL\")) * 100 AS M_Percentage\nFROM size_sales_amount\nWHERE Category = 'Set';",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "AmazonDB",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/AmazonDB')]",
+			"type": "Microsoft.Synapse/workspaces/databases",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"Ddls": [
+					{
+						"ActionType": "CREATE",
+						"OldEntity": null,
+						"NewEntity": {
+							"Name": "AmazonDB",
+							"EntityType": "DATABASE",
+							"Origin": {
+								"Type": "SPARK"
+							},
+							"Properties": {
+								"IsSyMSCDMDatabase": true
+							},
+							"Source": {
+								"Provider": "ADLS",
+								"Location": "abfss://amazoncontainer@amazonsalestorage.dfs.core.windows.net/AmazonDB",
+								"Properties": {
+									"FormatType": "csv",
+									"LinkedServiceName": "amazon-sale-synap-WorkspaceDefaultStorage"
+								}
+							},
+							"PublishStatus": "PUBLISHED",
+							"ObjectVersion": 4,
+							"ObjectId": "4d97262e-6619-411a-b5fb-c4e683798469"
+						},
+						"Source": {
+							"Type": "SPARK"
+						}
+					},
+					{
+						"ActionType": "CREATE",
+						"OldEntity": null,
+						"NewEntity": {
+							"Name": "category_wise_order_analysis",
+							"EntityType": "TABLE",
+							"TableType": "EXTERNAL",
+							"Namespace": {
+								"SchemaName": null,
+								"DatabaseName": "AmazonDB",
+								"DatabaseId": null
+							},
+							"StorageDescriptor": {
+								"Distribution": null,
+								"Columns": [
+									{
+										"Name": "Category",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "string",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 8000,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "string"
+											}
+										}
+									},
+									{
+										"Name": "Number_of_Orders",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "long",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "long"
+											}
+										}
+									},
+									{
+										"Name": "Sales_Quantity",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "long",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "long"
+											}
+										}
+									},
+									{
+										"Name": "Sales_Amount",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "double",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "double"
+											}
+										}
+									},
+									{
+										"Name": "Average_Order_Quantity",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "double",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "double"
+											}
+										}
+									},
+									{
+										"Name": "Average_Sales_Amount",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "double",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "double"
+											}
+										}
+									}
+								],
+								"ColumnSetEntityName": "e4fc0954-aef7-46c0-9574-fc6e911d4a1b",
+								"Format": {
+									"InputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat",
+									"OutputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat",
+									"FormatType": "parquet",
+									"SerializeLib": "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe",
+									"Properties": {
+										"path": "abfss://amazoncontainer@amazonsalestorage.dfs.core.windows.net/transform_data/category_wise_order_analysis.parquet/part-00000-tid-5132518843759981482-7aca52ce-4121-4440-9c82-eab36821499a-529-1-c000.snappy.parquet",
+										"FormatTypeSetToDatabaseDefault": false
+									}
+								},
+								"Source": {
+									"Provider": "ADLS",
+									"Location": "abfss://amazoncontainer@amazonsalestorage.dfs.core.windows.net/transform_data/category_wise_order_analysis.parquet/part-00000-tid-5132518843759981482-7aca52ce-4121-4440-9c82-eab36821499a-529-1-c000.snappy.parquet",
+									"Properties": {
+										"LinkedServiceName": "amazon-sale-synap-WorkspaceDefaultStorage",
+										"LocationSetToDatabaseDefault": false
+									}
+								},
+								"Properties": {
+									"textinputformat.record.delimiter": ",",
+									"compression": "{\"type\":\"None\",\"level\":\"optimal\"}",
+									"derivedModelAttributeInfo": "{\"attributeReferences\":{}}"
+								},
+								"Compressed": false,
+								"SerDeInfo": null,
+								"IsStoredAsSubdirectories": false
+							},
+							"Owner": null,
+							"CreateTime": 0,
+							"LastAccessTime": 0,
+							"Retention": 0,
+							"Temporary": false,
+							"IsRewriteEnabled": false,
+							"ViewOriginalText": null,
+							"ViewExpandedText": null,
+							"Origin": {
+								"Type": "SPARK"
+							},
+							"OriginObjectId": null,
+							"IsSharedEntity": false,
+							"PublishStatus": "PUBLISHED",
+							"Properties": {
+								"Description": "",
+								"DisplayFolderInfo": "{\"name\":\"Others\",\"colorCode\":\"\"}",
+								"PrimaryKeys": "",
+								"spark.sql.sources.provider": "parquet",
+								"spark.sql.sources.schema.numParts": "1",
+								"spark.sql.sources.schema.part.0": "{\"type\":\"struct\",\"fields\":[{\"name\":\"Category\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}},{\"name\":\"Number_of_Orders\",\"type\":\"long\",\"nullable\":true,\"metadata\":{}},{\"name\":\"Sales_Quantity\",\"type\":\"long\",\"nullable\":true,\"metadata\":{}},{\"name\":\"Sales_Amount\",\"type\":\"double\",\"nullable\":true,\"metadata\":{}},{\"name\":\"Average_Order_Quantity\",\"type\":\"double\",\"nullable\":true,\"metadata\":{}},{\"name\":\"Average_Sales_Amount\",\"type\":\"double\",\"nullable\":true,\"metadata\":{}}]}"
+							},
+							"ObjectVersion": 2,
+							"ObjectId": "0d6f2db3-2ccd-4f9e-b5b3-b2f299ddd4c8",
+							"Description": ""
+						},
+						"Source": {
+							"Type": "SPARK"
+						}
+					},
+					{
+						"ActionType": "CREATE",
+						"OldEntity": null,
+						"NewEntity": {
+							"Name": "size_sales_amount",
+							"EntityType": "TABLE",
+							"TableType": "EXTERNAL",
+							"Namespace": {
+								"SchemaName": null,
+								"DatabaseName": "AmazonDB",
+								"DatabaseId": null
+							},
+							"StorageDescriptor": {
+								"Distribution": null,
+								"Columns": [
+									{
+										"Name": "Category",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "string",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 8000,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "string"
+											}
+										}
+									},
+									{
+										"Name": "Free",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "double",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "double"
+											}
+										}
+									},
+									{
+										"Name": "XS",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "double",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "double"
+											}
+										}
+									},
+									{
+										"Name": "S",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "double",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "double"
+											}
+										}
+									},
+									{
+										"Name": "M",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "double",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "double"
+											}
+										}
+									},
+									{
+										"Name": "L",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "double",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "double"
+											}
+										}
+									},
+									{
+										"Name": "XL",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "double",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "double"
+											}
+										}
+									},
+									{
+										"Name": "XXL",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "double",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "double"
+											}
+										}
+									},
+									{
+										"Name": "3XL",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "double",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "double"
+											}
+										}
+									},
+									{
+										"Name": "4XL",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "double",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "double"
+											}
+										}
+									},
+									{
+										"Name": "5XL",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "double",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "double"
+											}
+										}
+									},
+									{
+										"Name": "6XL",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "double",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "double"
+											}
+										}
+									}
+								],
+								"ColumnSetEntityName": "97cd13ec-3e75-477f-92e4-62edc91c739e",
+								"Format": {
+									"InputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat",
+									"OutputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat",
+									"FormatType": "parquet",
+									"SerializeLib": "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe",
+									"Properties": {
+										"path": "abfss://amazoncontainer@amazonsalestorage.dfs.core.windows.net/transform_data/size_sales_amount.parquet/part-00000-tid-2300678012968625801-15ac869f-4b0a-4053-b460-8c89fef1a6eb-535-1-c000.snappy.parquet",
+										"FormatTypeSetToDatabaseDefault": false
+									}
+								},
+								"Source": {
+									"Provider": "ADLS",
+									"Location": "abfss://amazoncontainer@amazonsalestorage.dfs.core.windows.net/transform_data/size_sales_amount.parquet/part-00000-tid-2300678012968625801-15ac869f-4b0a-4053-b460-8c89fef1a6eb-535-1-c000.snappy.parquet",
+									"Properties": {
+										"LinkedServiceName": "amazon-sale-synap-WorkspaceDefaultStorage",
+										"LocationSetToDatabaseDefault": false
+									}
+								},
+								"Properties": {
+									"textinputformat.record.delimiter": ",",
+									"compression": "",
+									"derivedModelAttributeInfo": "{\"attributeReferences\":{}}"
+								},
+								"Compressed": false,
+								"SerDeInfo": null,
+								"IsStoredAsSubdirectories": false
+							},
+							"Owner": null,
+							"CreateTime": 0,
+							"LastAccessTime": 0,
+							"Retention": 0,
+							"Temporary": false,
+							"IsRewriteEnabled": false,
+							"ViewOriginalText": null,
+							"ViewExpandedText": null,
+							"Origin": {
+								"Type": "SPARK"
+							},
+							"OriginObjectId": null,
+							"IsSharedEntity": false,
+							"PublishStatus": "PUBLISHED",
+							"Properties": {
+								"Description": "",
+								"DisplayFolderInfo": "{\"name\":\"Others\",\"colorCode\":\"\"}",
+								"PrimaryKeys": "",
+								"spark.sql.sources.provider": "parquet",
+								"spark.sql.sources.schema.numParts": "1",
+								"spark.sql.sources.schema.part.0": "{\"type\":\"struct\",\"fields\":[{\"name\":\"Category\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}},{\"name\":\"Free\",\"type\":\"double\",\"nullable\":true,\"metadata\":{}},{\"name\":\"XS\",\"type\":\"double\",\"nullable\":true,\"metadata\":{}},{\"name\":\"S\",\"type\":\"double\",\"nullable\":true,\"metadata\":{}},{\"name\":\"M\",\"type\":\"double\",\"nullable\":true,\"metadata\":{}},{\"name\":\"L\",\"type\":\"double\",\"nullable\":true,\"metadata\":{}},{\"name\":\"XL\",\"type\":\"double\",\"nullable\":true,\"metadata\":{}},{\"name\":\"XXL\",\"type\":\"double\",\"nullable\":true,\"metadata\":{}},{\"name\":\"3XL\",\"type\":\"double\",\"nullable\":true,\"metadata\":{}},{\"name\":\"4XL\",\"type\":\"double\",\"nullable\":true,\"metadata\":{}},{\"name\":\"5XL\",\"type\":\"double\",\"nullable\":true,\"metadata\":{}},{\"name\":\"6XL\",\"type\":\"double\",\"nullable\":true,\"metadata\":{}}]}"
+							},
+							"ObjectVersion": 1,
+							"ObjectId": "46ec8676-b3a9-432d-98ea-e7d6449cf308",
+							"Description": ""
+						},
+						"Source": {
+							"Type": "SPARK"
+						}
+					},
+					{
+						"ActionType": "CREATE",
+						"OldEntity": null,
+						"NewEntity": {
+							"Name": "size_sales_quantity",
+							"EntityType": "TABLE",
+							"TableType": "EXTERNAL",
+							"Namespace": {
+								"SchemaName": null,
+								"DatabaseName": "AmazonDB",
+								"DatabaseId": null
+							},
+							"StorageDescriptor": {
+								"Distribution": null,
+								"Columns": [
+									{
+										"Name": "Category",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "string",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 8000,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "string"
+											}
+										}
+									},
+									{
+										"Name": "Free",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "long",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "long"
+											}
+										}
+									},
+									{
+										"Name": "XS",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "long",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "long"
+											}
+										}
+									},
+									{
+										"Name": "S",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "long",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "long"
+											}
+										}
+									},
+									{
+										"Name": "M",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "long",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "long"
+											}
+										}
+									},
+									{
+										"Name": "L",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "long",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "long"
+											}
+										}
+									},
+									{
+										"Name": "XL",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "long",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "long"
+											}
+										}
+									},
+									{
+										"Name": "XXL",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "long",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "long"
+											}
+										}
+									},
+									{
+										"Name": "3XL",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "long",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "long"
+											}
+										}
+									},
+									{
+										"Name": "4XL",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "long",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "long"
+											}
+										}
+									},
+									{
+										"Name": "5XL",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "long",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "long"
+											}
+										}
+									},
+									{
+										"Name": "6XL",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "long",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "long"
+											}
+										}
+									}
+								],
+								"ColumnSetEntityName": "eadec640-a2dd-4d06-bbf6-6be87d2abe09",
+								"Format": {
+									"InputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat",
+									"OutputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat",
+									"FormatType": "parquet",
+									"SerializeLib": "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe",
+									"Properties": {
+										"path": "abfss://amazoncontainer@amazonsalestorage.dfs.core.windows.net/transform_data/size_sales_quantity.parquet/part-00000-tid-5308634006131687255-84c7d5af-c272-44ac-b961-3b0dfca24170-541-1-c000.snappy.parquet",
+										"FormatTypeSetToDatabaseDefault": false
+									}
+								},
+								"Source": {
+									"Provider": "ADLS",
+									"Location": "abfss://amazoncontainer@amazonsalestorage.dfs.core.windows.net/transform_data/size_sales_quantity.parquet/part-00000-tid-5308634006131687255-84c7d5af-c272-44ac-b961-3b0dfca24170-541-1-c000.snappy.parquet",
+									"Properties": {
+										"LinkedServiceName": "amazon-sale-synap-WorkspaceDefaultStorage",
+										"LocationSetToDatabaseDefault": false
+									}
+								},
+								"Properties": {
+									"textinputformat.record.delimiter": ",",
+									"compression": "{\"type\":\"None\",\"level\":\"optimal\"}",
+									"derivedModelAttributeInfo": "{\"attributeReferences\":{}}"
+								},
+								"Compressed": false,
+								"SerDeInfo": null,
+								"IsStoredAsSubdirectories": false
+							},
+							"Owner": null,
+							"CreateTime": 0,
+							"LastAccessTime": 0,
+							"Retention": 0,
+							"Temporary": false,
+							"IsRewriteEnabled": false,
+							"ViewOriginalText": null,
+							"ViewExpandedText": null,
+							"Origin": {
+								"Type": "SPARK"
+							},
+							"OriginObjectId": null,
+							"IsSharedEntity": false,
+							"PublishStatus": "PUBLISHED",
+							"Properties": {
+								"Description": "",
+								"DisplayFolderInfo": "{\"name\":\"Others\",\"colorCode\":\"\"}",
+								"PrimaryKeys": "",
+								"spark.sql.sources.provider": "parquet",
+								"spark.sql.sources.schema.numParts": "1",
+								"spark.sql.sources.schema.part.0": "{\"type\":\"struct\",\"fields\":[{\"name\":\"Category\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}},{\"name\":\"Free\",\"type\":\"long\",\"nullable\":true,\"metadata\":{}},{\"name\":\"XS\",\"type\":\"long\",\"nullable\":true,\"metadata\":{}},{\"name\":\"S\",\"type\":\"long\",\"nullable\":true,\"metadata\":{}},{\"name\":\"M\",\"type\":\"long\",\"nullable\":true,\"metadata\":{}},{\"name\":\"L\",\"type\":\"long\",\"nullable\":true,\"metadata\":{}},{\"name\":\"XL\",\"type\":\"long\",\"nullable\":true,\"metadata\":{}},{\"name\":\"XXL\",\"type\":\"long\",\"nullable\":true,\"metadata\":{}},{\"name\":\"3XL\",\"type\":\"long\",\"nullable\":true,\"metadata\":{}},{\"name\":\"4XL\",\"type\":\"long\",\"nullable\":true,\"metadata\":{}},{\"name\":\"5XL\",\"type\":\"long\",\"nullable\":true,\"metadata\":{}},{\"name\":\"6XL\",\"type\":\"long\",\"nullable\":true,\"metadata\":{}}]}"
+							},
+							"ObjectVersion": 2,
+							"ObjectId": "636f8ada-6813-48fa-b702-bdc462d820e1",
+							"Description": ""
+						},
+						"Source": {
+							"Type": "SPARK"
+						}
+					},
+					{
+						"ActionType": "CREATE",
+						"OldEntity": null,
+						"NewEntity": {
+							"Name": "state_wise_order_analysis",
+							"EntityType": "TABLE",
+							"TableType": "EXTERNAL",
+							"Namespace": {
+								"SchemaName": null,
+								"DatabaseName": "AmazonDB",
+								"DatabaseId": null
+							},
+							"StorageDescriptor": {
+								"Distribution": null,
+								"Columns": [
+									{
+										"Name": "state",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "string",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 8000,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "string"
+											}
+										}
+									},
+									{
+										"Name": "Number_of_Orders",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "long",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "long"
+											}
+										}
+									},
+									{
+										"Name": "Sales_Quantity",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "long",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "long"
+											}
+										}
+									},
+									{
+										"Name": "Sales_Amount",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "double",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "double"
+											}
+										}
+									},
+									{
+										"Name": "Average_Order_Quantity",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "double",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "double"
+											}
+										}
+									},
+									{
+										"Name": "Average_Sales_Amount",
+										"Description": null,
+										"OriginDataTypeName": {
+											"TypeName": "double",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 0,
+											"Precision": 0,
+											"Scale": 0,
+											"Properties": {
+												"HIVE_TYPE_STRING": "double"
+											}
+										}
+									}
+								],
+								"ColumnSetEntityName": "52e6c5c7-c4cb-454a-adcf-88e2a2fdbf51",
+								"Format": {
+									"InputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat",
+									"OutputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat",
+									"FormatType": "parquet",
+									"SerializeLib": "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe",
+									"Properties": {
+										"path": "abfss://amazoncontainer@amazonsalestorage.dfs.core.windows.net/transform_data/state_wise_order_analysis.parquet/part-00000-tid-8573911560478639241-f32d1e65-67d5-43ff-b59d-42081c1cacf3-517-1-c000.snappy.parquet",
+										"FormatTypeSetToDatabaseDefault": false
+									}
+								},
+								"Source": {
+									"Provider": "ADLS",
+									"Location": "abfss://amazoncontainer@amazonsalestorage.dfs.core.windows.net/transform_data/state_wise_order_analysis.parquet/part-00000-tid-8573911560478639241-f32d1e65-67d5-43ff-b59d-42081c1cacf3-517-1-c000.snappy.parquet",
+									"Properties": {
+										"LinkedServiceName": "amazon-sale-synap-WorkspaceDefaultStorage",
+										"LocationSetToDatabaseDefault": false
+									}
+								},
+								"Properties": {
+									"textinputformat.record.delimiter": ",",
+									"compression": "",
+									"derivedModelAttributeInfo": "{\"attributeReferences\":{}}"
+								},
+								"Compressed": false,
+								"SerDeInfo": null,
+								"IsStoredAsSubdirectories": false
+							},
+							"Owner": null,
+							"CreateTime": 0,
+							"LastAccessTime": 0,
+							"Retention": 0,
+							"Temporary": false,
+							"IsRewriteEnabled": false,
+							"ViewOriginalText": null,
+							"ViewExpandedText": null,
+							"Origin": {
+								"Type": "SPARK"
+							},
+							"OriginObjectId": null,
+							"IsSharedEntity": false,
+							"PublishStatus": "PUBLISHED",
+							"Properties": {
+								"Description": "",
+								"DisplayFolderInfo": "{\"name\":\"Others\",\"colorCode\":\"\"}",
+								"PrimaryKeys": "",
+								"spark.sql.sources.provider": "parquet",
+								"spark.sql.sources.schema.numParts": "1",
+								"spark.sql.sources.schema.part.0": "{\"type\":\"struct\",\"fields\":[{\"name\":\"state\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}},{\"name\":\"Number_of_Orders\",\"type\":\"long\",\"nullable\":true,\"metadata\":{}},{\"name\":\"Sales_Quantity\",\"type\":\"long\",\"nullable\":true,\"metadata\":{}},{\"name\":\"Sales_Amount\",\"type\":\"double\",\"nullable\":true,\"metadata\":{}},{\"name\":\"Average_Order_Quantity\",\"type\":\"double\",\"nullable\":true,\"metadata\":{}},{\"name\":\"Average_Sales_Amount\",\"type\":\"double\",\"nullable\":true,\"metadata\":{}}]}"
+							},
+							"ObjectVersion": 1,
+							"ObjectId": "d53af2a2-809a-4474-8202-a7ac28fd7b06",
+							"Description": ""
+						},
+						"Source": {
+							"Type": "SPARK"
+						}
+					}
+				]
+			},
+			"dependsOn": []
+		}
+	]
+}

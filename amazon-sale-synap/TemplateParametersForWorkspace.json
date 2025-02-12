@@ -1,0 +1,15 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workspaceName": {
+			"value": "amazon-sale-synap"
+		},
+		"amazon-sale-synap-WorkspaceDefaultSqlServer_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:amazon-sale-synap.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+		},
+		"amazon-sale-synap-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"value": "https://amazonsalestorage.dfs.core.windows.net"
+		}
+	}
+}
