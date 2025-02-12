@@ -1,0 +1,25 @@
+{
+	"name": "AmazonDB",
+	"properties": {
+		"Name": "AmazonDB",
+		"EntityType": "DATABASE",
+		"Origin": {
+			"Type": "SPARK"
+		},
+		"Properties": {
+			"IsSyMSCDMDatabase": true
+		},
+		"Source": {
+			"Provider": "ADLS",
+			"Location": "abfss://amazoncontainer@amazonsalestorage.dfs.core.windows.net/AmazonDB",
+			"Properties": {
+				"FormatType": "csv",
+				"LinkedServiceName": "amazon-sale-synap-WorkspaceDefaultStorage"
+			}
+		},
+		"PublishStatus": "PUBLISHED",
+		"ObjectVersion": 4,
+		"ObjectId": "4d97262e-6619-411a-b5fb-c4e683798469"
+	},
+	"type": "DATABASE"
+}

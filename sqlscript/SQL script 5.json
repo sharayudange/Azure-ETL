@@ -1,0 +1,17 @@
+{
+	"name": "SQL script 5",
+	"properties": {
+		"content": {
+			"query": "-- Query to calculate the total count of products in XS and S sizes for each category\nSELECT \n    Category,\n    SUM(XS + S) AS Total_XS_S\nFROM size_sales_quantity\nGROUP BY Category\nORDER BY Total_XS_S DESC;\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "AmazonDB",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

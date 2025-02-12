@@ -1,0 +1,17 @@
+{
+	"name": "SQL script 1",
+	"properties": {
+		"content": {
+			"query": "-- Query to calculate total sales and average sales amount for each category\nSELECT \n    Category,\n    SUM(Sales_Amount) AS Total_Sales_Amount,  -- Sum of sales amount for each category\n    AVG(Sales_Amount) AS Average_Sales_Amount, -- Average sales amount for each category\n    COUNT(*) AS Number_of_Records             -- Count of records for each category\nFROM category_wise_order_analysis\nGROUP BY Category  -- Group the data by Category\nORDER BY Total_Sales_Amount DESC;  -- Order by Total Sales Amount in descending order\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "AmazonDB",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

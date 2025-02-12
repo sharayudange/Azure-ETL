@@ -1,0 +1,17 @@
+{
+	"name": "SQL script 2",
+	"properties": {
+		"content": {
+			"query": "-- Query to calculate total number of orders and total sales for each category\nSELECT \n    Category,\n    SUM(Number_of_Orders) AS Total_Orders,\n    SUM(Sales_Amount) AS Total_Sales_Amount\nFROM category_wise_order_analysis\nGROUP BY Category\nORDER BY Total_Sales_Amount DESC;  -- Order by total sales amount in descending order\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "AmazonDB",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
