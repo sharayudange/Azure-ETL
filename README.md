@@ -27,10 +27,10 @@ The transformed data is stored back in Azure Data Lake for further processing.
 Final transformed data is loaded into Azure Synapse Analytics for SQL-based querying and analysis.
 
 # Technologies Used
-# Azure Blob Storage (for raw data storage)
-# Azure Data Lake (for data management)
-# Azure Data Factory (for building the ETL pipeline)
-# Databricks (for data transformation using Spark)
-# Azure Synapse Analytics (for SQL-based data analysis)
+- Azure Blob Storage (for raw data storage)
+- Azure Data Lake (for data management)
+- Azure Data Factory (for building the ETL pipeline)
+- Databricks (for data transformation using Spark)
+- Azure Synapse Analytics (for SQL-based data analysis)
 
                                                                                                                                                                                       
