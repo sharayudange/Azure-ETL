@@ -1,0 +1,125 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "amazonsale-df"
+		},
+		"AzureDataLakeStorage1_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'AzureDataLakeStorage1'"
+		},
+		"AmazonHttp_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://raw.githubusercontent.com/aradhya0530/Amazon_sales_ETL/refs/heads/main/Amazon%20Sale%20Report.csv"
+		},
+		"AzureDataLakeStorage1_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://amazonsalestorage.dfs.core.windows.net/"
+		},
+		"CloudHttp_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://raw.githubusercontent.com/aradhya0530/Amazon_sales_ETL/refs/heads/main/Cloud%20Warehouse%20Compersion%20Chart.csv"
+		},
+		"ExpenseHttp_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://raw.githubusercontent.com/aradhya0530/Amazon_sales_ETL/refs/heads/main/Expense%20IIGF.csv"
+		},
+		"MayHttp_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://raw.githubusercontent.com/aradhya0530/Amazon_sales_ETL/refs/heads/main/May-2022.csv"
+		},
+		"SalesHttp_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://raw.githubusercontent.com/aradhya0530/Amazon_sales_ETL/refs/heads/main/Sale%20Report.csv"
+		},
+		"internationalHttp_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://raw.githubusercontent.com/aradhya0530/Amazon_sales_ETL/refs/heads/main/International%20sale%20Report.csv"
+		},
+		"marchHTTP_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://raw.githubusercontent.com/aradhya0530/Amazon_sales_ETL/refs/heads/main/P%20%20L%20March%202021.csv"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "amazonsale-df_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"AzureDataLakeStorage1_accountKey": {
+						"value": "[parameters('AzureDataLakeStorage1_accountKey')]"
+					},
+					"AmazonHttp_properties_typeProperties_url": {
+						"value": "[parameters('AmazonHttp_properties_typeProperties_url')]"
+					},
+					"AzureDataLakeStorage1_properties_typeProperties_url": {
+						"value": "[parameters('AzureDataLakeStorage1_properties_typeProperties_url')]"
+					},
+					"CloudHttp_properties_typeProperties_url": {
+						"value": "[parameters('CloudHttp_properties_typeProperties_url')]"
+					},
+					"ExpenseHttp_properties_typeProperties_url": {
+						"value": "[parameters('ExpenseHttp_properties_typeProperties_url')]"
+					},
+					"MayHttp_properties_typeProperties_url": {
+						"value": "[parameters('MayHttp_properties_typeProperties_url')]"
+					},
+					"SalesHttp_properties_typeProperties_url": {
+						"value": "[parameters('SalesHttp_properties_typeProperties_url')]"
+					},
+					"internationalHttp_properties_typeProperties_url": {
+						"value": "[parameters('internationalHttp_properties_typeProperties_url')]"
+					},
+					"marchHTTP_properties_typeProperties_url": {
+						"value": "[parameters('marchHTTP_properties_typeProperties_url')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "amazonsale-df_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'amazonsale-df_ArmTemplate_0')]"
+			]
+		}
+	]
+}

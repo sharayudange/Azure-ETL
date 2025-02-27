@@ -1,0 +1,42 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "amazonsale-df"
+		},
+		"AzureDataLakeStorage1_accountKey": {
+			"value": ""
+		},
+		"AmazonHttp_properties_typeProperties_url": {
+			"value": "https://raw.githubusercontent.com/aradhya0530/Amazon_sales_ETL/refs/heads/main/Amazon%20Sale%20Report.csv"
+		},
+		"AzureDataLakeStorage1_properties_typeProperties_url": {
+			"value": "https://amazonsalestorage.dfs.core.windows.net/"
+		},
+		"CloudHttp_properties_typeProperties_url": {
+			"value": "https://raw.githubusercontent.com/aradhya0530/Amazon_sales_ETL/refs/heads/main/Cloud%20Warehouse%20Compersion%20Chart.csv"
+		},
+		"ExpenseHttp_properties_typeProperties_url": {
+			"value": "https://raw.githubusercontent.com/aradhya0530/Amazon_sales_ETL/refs/heads/main/Expense%20IIGF.csv"
+		},
+		"MayHttp_properties_typeProperties_url": {
+			"value": "https://raw.githubusercontent.com/aradhya0530/Amazon_sales_ETL/refs/heads/main/May-2022.csv"
+		},
+		"SalesHttp_properties_typeProperties_url": {
+			"value": "https://raw.githubusercontent.com/aradhya0530/Amazon_sales_ETL/refs/heads/main/Sale%20Report.csv"
+		},
+		"internationalHttp_properties_typeProperties_url": {
+			"value": "https://raw.githubusercontent.com/aradhya0530/Amazon_sales_ETL/refs/heads/main/International%20sale%20Report.csv"
+		},
+		"marchHTTP_properties_typeProperties_url": {
+			"value": "https://raw.githubusercontent.com/aradhya0530/Amazon_sales_ETL/refs/heads/main/P%20%20L%20March%202021.csv"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}
